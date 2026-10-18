@@ -52,7 +52,7 @@
   .ascii-bg{
     position: fixed;
     top: 6vh; left: 50%;
-    transform: translateX(-50%);
+    transform: translate(calc(-50% + var(--ascii-x, 0px)), var(--ascii-y, 0px));
     width: min(1500px, 94vw);
     margin: 0;
     font-family: var(--mono);
@@ -61,13 +61,16 @@
     letter-spacing: 0;
     white-space: pre;
     color: var(--accent);
-    opacity: 0.09;
+    opacity: 0.15;
+    text-shadow: 0 0 10px rgba(127, 182, 164, 0.28);
     pointer-events: none;
     user-select: none;
     z-index: 0;
+    will-change: transform;
+    transition: opacity 0.3s ease;
   }
   @media (max-width: 700px){
-    .ascii-bg{ opacity: 0.07; top: 4vh; }
+    .ascii-bg{ opacity: 0.11; top: 4vh; }
   }
   a{ color: inherit; text-decoration: none; }
   img{ max-width:100%; display:block; }
@@ -243,10 +246,7 @@
   }
 
   @media (max-width: 600px){
-    .wrap hero-inner{
-      border: 3px solid red;
-    }
-    .wrap{ padding: 0 18px;  }
+    .wrap{ padding: 0 18px; }
     section{ padding: 56px 0; }
     .hero{ padding: 48px 0 56px; }
     .hero h1{ font-size: clamp(1.9rem, 8vw, 2.4rem); }
@@ -275,6 +275,7 @@
     html{ scroll-behavior:auto; }
     .cursor{ animation:none; }
     .log-entry{ opacity:1 !important; transform:none !important; transition:none; }
+    .ascii-bg{ transform: translateX(-50%) !important; }
   }
 </style>
 </head>
@@ -412,6 +413,7 @@
         <span class="chip">HTML</span>
         <span class="chip">CSS</span>
         <span class="chip">JavaScript</span>
+        <span class="chip">React</span>
         <span class="chip">Bootstrap</span>
       </div>
     </div>
@@ -447,9 +449,22 @@
 
       <div class="log" id="log">
 
-          <div class="log-entry">
+        <div class="log-entry">
           <div class="log-dot"></div>
-          <div class="log-path">~/projects/08 </div>
+          <div class="log-path">~/projects/09 — most recent</div>
+          <div class="log-card">
+            <div class="log-card-main">
+              <h3>THE PLATTER HOUSE</h3>
+              <p>An end-to-end food ordering and vendor fulfillment platform engineered for upscale customer presentation and high-volume kitchen operations, featuring interactive menus, cart management, and integrated Paystack payment processing.</p>
+              <div class="tag-row"><span class="chip">React</span><span class="chip">Tailwind CSS</span><span class="chip">Paystack</span></div>
+            </div>
+            <a class="visit" href="https://davidajayia.github.io/THE-PLATTER-HOUSE/" target="_blank" rel="noopener">Visit site <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M7 7h10v10"/></svg></a>
+          </div>
+        </div>
+
+        <div class="log-entry">
+          <div class="log-dot"></div>
+          <div class="log-path">~/projects/08</div>
           <div class="log-card">
             <div class="log-card-main">
               <h3>BRIDGE GLOBAL PRODUCTION</h3>
@@ -463,7 +478,7 @@
 
         <div class="log-entry">
           <div class="log-dot"></div>
-          <div class="log-path">~/projects/07 — most recent</div>
+          <div class="log-path">~/projects/07</div>
           <div class="log-card">
             <div class="log-card-main">
               <h3>Consulting Club of Lagos</h3>
@@ -623,6 +638,207 @@
   } else {
     entries.forEach(el => el.classList.add('in'));
   }
+
+  // subtle ASCII background motion & character wave animation
+  (function initAsciiAnimation() {
+    const asciiEl = document.querySelector('.ascii-bg');
+    if (!asciiEl) return;
+
+    // Respect reduced motion preference
+    const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    if (reduceMotionQuery.matches) return;
+
+    const originalText = asciiEl.textContent;
+    const lines = originalText.split('\n');
+    const totalLines = lines.length;
+
+    // Density ramp and alternate glyph sets matching luminance
+    const densityMap = [
+      [' '],                          // 0
+      ['.', '`', "'"],                // 1
+      [':', ';', '"', '^'],           // 2
+      ['-', '~', '_', '='],           // 3
+      ['=', '>', '<', '/'],           // 4
+      ['+', 'x', '7', 'z'],           // 5
+      ['*', 's', 'o', 'a'],           // 6
+      ['#', '$', 'X', 'E'],           // 7
+      ['%', '&', '8', 'B'],           // 8
+      ['@', 'W', 'M', 'Q']            // 9
+    ];
+    const charToDensity = {};
+    densityMap.forEach((chars, d) => {
+      chars.forEach(c => { charToDensity[c] = d; });
+    });
+
+    // Build active non-space coordinate index list and row buckets
+    const originalChars = [];
+    const activeItems = [];
+    const rowBuckets = Array.from({ length: totalLines }, () => []);
+    let charIdx = 0;
+
+    for (let r = 0; r < totalLines; r++) {
+      const line = lines[r];
+      const lineLen = line.length;
+      for (let c = 0; c < lineLen; c++) {
+        const ch = line[c];
+        originalChars.push(ch);
+        if (ch !== ' ') {
+          const d = charToDensity[ch] ?? 5;
+          const item = {
+            index: charIdx,
+            origChar: ch,
+            density: d,
+            r: r,
+            c: c,
+            diag: r * 0.9 + c * 0.6,
+            normX: c / 120,
+            normY: r / totalLines
+          };
+          activeItems.push(item);
+          rowBuckets[r].push(item);
+        }
+        charIdx++;
+      }
+      if (r < totalLines - 1) {
+        originalChars.push('\n');
+        charIdx++;
+      }
+    }
+
+    const workingChars = originalChars.slice();
+    let mutatedIndices = [];
+    const totalActive = activeItems.length;
+    const maxDiag = totalLines * 0.9 + 120 * 0.6; // ~160
+
+    // Parallax & mouse tracking
+    let mouseNormX = 0.5;
+    let mouseNormY = 0.35;
+    let hasMouseMoved = false;
+
+    window.addEventListener('mousemove', (e) => {
+      hasMouseMoved = true;
+      mouseNormX = e.clientX / window.innerWidth;
+      mouseNormY = e.clientY / window.innerHeight;
+    }, { passive: true });
+
+    let currX = 0;
+    let currY = 0;
+    let lastCharUpdateTime = 0;
+    const charUpdateInterval = 42; // ~24 fps for smooth, organic terminal flow
+    let rafId = null;
+
+    function render(timestamp) {
+      // 1. Smooth ambient float + subtle mouse parallax
+      const ambientX = Math.sin(timestamp * 0.00045) * 8;
+      const ambientY = Math.cos(timestamp * 0.00065) * 11;
+
+      const mouseOffsetX = hasMouseMoved ? (mouseNormX - 0.5) * -22 : 0;
+      const mouseOffsetY = hasMouseMoved ? (mouseNormY - 0.5) * -16 : 0;
+
+      const targetX = ambientX + mouseOffsetX;
+      const targetY = ambientY + mouseOffsetY;
+
+      currX += (targetX - currX) * 0.06;
+      currY += (targetY - currY) * 0.06;
+
+      asciiEl.style.setProperty('--ascii-x', currX.toFixed(2) + 'px');
+      asciiEl.style.setProperty('--ascii-y', currY.toFixed(2) + 'px');
+
+      // 2. Character contents animation (sweeping wave, ambient sparkle, cursor halo)
+      if (timestamp - lastCharUpdateTime > charUpdateInterval) {
+        lastCharUpdateTime = timestamp;
+
+        // Restore previously mutated characters
+        for (let i = 0; i < mutatedIndices.length; i++) {
+          const item = mutatedIndices[i];
+          workingChars[item.index] = item.origChar;
+        }
+        mutatedIndices = [];
+
+        // A. Continuous sweeping diagonal wave
+        const waveCenter = ((timestamp * 0.045) % (maxDiag + 50)) - 25;
+        const waveWidth = 16;
+
+        for (let i = 0; i < totalActive; i += 3) {
+          const item = activeItems[i];
+          const dist = Math.abs(item.diag - waveCenter);
+          if (dist < waveWidth) {
+            const delta = (dist < waveWidth * 0.4) ? 2 : 1;
+            const newD = Math.min(9, item.density + delta);
+            const glyphs = densityMap[newD];
+            workingChars[item.index] = glyphs[Math.floor(Math.random() * glyphs.length)];
+            mutatedIndices.push(item);
+          }
+        }
+
+        // B. Ambient sparkle flux (scattered cyber shimmer across the portrait)
+        for (let i = 0; i < 70; i++) {
+          const item = activeItems[Math.floor(Math.random() * totalActive)];
+          const delta = Math.random() > 0.5 ? 1 : -1;
+          const newD = Math.max(1, Math.min(9, item.density + delta));
+          const glyphs = densityMap[newD];
+          workingChars[item.index] = glyphs[Math.floor(Math.random() * glyphs.length)];
+          mutatedIndices.push(item);
+        }
+
+        // C. Interactive cursor halo
+        if (hasMouseMoved) {
+          const mouseR = Math.floor(mouseNormY * totalLines);
+          const mouseC = Math.floor(mouseNormX * 120);
+          const haloRadius = 12;
+          const rMin = Math.max(0, mouseR - haloRadius);
+          const rMax = Math.min(totalLines - 1, mouseR + haloRadius);
+
+          for (let r = rMin; r <= rMax; r++) {
+            const rowList = rowBuckets[r];
+            for (let j = 0; j < rowList.length; j++) {
+              const item = rowList[j];
+              const dc = item.c - mouseC;
+              const dr = (item.r - mouseR) * 1.5;
+              if (dc * dc + dr * dr < haloRadius * haloRadius) {
+                if (Math.random() > 0.3) {
+                  const delta = Math.random() > 0.4 ? 1 : -1;
+                  const newD = Math.max(1, Math.min(9, item.density + delta));
+                  const glyphs = densityMap[newD];
+                  workingChars[item.index] = glyphs[Math.floor(Math.random() * glyphs.length)];
+                  mutatedIndices.push(item);
+                }
+              }
+            }
+          }
+        }
+
+        asciiEl.textContent = workingChars.join('');
+      }
+
+      rafId = requestAnimationFrame(render);
+    }
+
+    // Pause when tab is inactive to save battery
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        if (rafId) cancelAnimationFrame(rafId);
+      } else {
+        lastCharUpdateTime = performance.now();
+        rafId = requestAnimationFrame(render);
+      }
+    });
+
+    // Handle dynamic reduced motion preference toggling
+    reduceMotionQuery.addEventListener('change', (e) => {
+      if (e.matches) {
+        if (rafId) cancelAnimationFrame(rafId);
+        asciiEl.textContent = originalText;
+        asciiEl.style.removeProperty('--ascii-x');
+        asciiEl.style.removeProperty('--ascii-y');
+      } else {
+        lastCharUpdateTime = performance.now();
+        rafId = requestAnimationFrame(render);
+      }
+    });
+
+    rafId = requestAnimationFrame(render);
+  })();
 </script>
 
 </body>

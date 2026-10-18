@@ -223,6 +223,34 @@
   .visit svg{ width:13px; height:13px; transition: transform 0.18s ease; }
   .log-card:hover .visit svg{ transform: translate(2px,-2px); }
 
+  .project-title-row{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:8px; }
+  .badge-status{
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--amber);
+    background: rgba(227, 163, 96, 0.12);
+    border: 1px solid rgba(227, 163, 96, 0.35);
+    padding: 2px 10px;
+    border-radius: 999px;
+  }
+  .status-dot{
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 6px var(--amber);
+    animation: pulseDot 2s infinite ease-in-out;
+  }
+  @keyframes pulseDot{
+    0%, 100%{ opacity: 1; transform: scale(1); }
+    50%{ opacity: 0.35; transform: scale(0.8); }
+  }
+  .log-dot.wip{ border-color: var(--amber); }
+
   /* CONTACT */
   .contact-box{
     background: var(--surface); border:1px solid var(--line); border-radius:18px;
@@ -274,6 +302,7 @@
   @media (prefers-reduced-motion: reduce){
     html{ scroll-behavior:auto; }
     .cursor{ animation:none; }
+    .status-dot{ animation:none; }
     .log-entry{ opacity:1 !important; transform:none !important; transition:none; }
     .ascii-bg{ transform: translateX(-50%) !important; }
   }
@@ -450,26 +479,33 @@
       <div class="log" id="log">
 
         <div class="log-entry">
-          <div class="log-dot"></div>
-          <div class="log-path">~/projects/09 — most recent</div>
+          <div class="log-dot wip"></div>
+          <div class="log-path">~/projects/09 — in active development</div>
           <div class="log-card">
             <div class="log-card-main">
-              <h3>THE PLATTER HOUSE</h3>
-              <p>An end-to-end food ordering and vendor fulfillment platform engineered for upscale customer presentation and high-volume kitchen operations, featuring interactive menus, cart management, and integrated Paystack payment processing.</p>
+              <div class="project-title-row">
+                <h3 style="margin-bottom:0;">THE PLATTER HOUSE</h3>
+                <span class="badge-status"><span class="status-dot"></span>In active development</span>
+              </div>
+              <p>An end-to-end food ordering and catering platform engineered for upscale customer presentation and seamless vendor fulfillment. <em>Currently in active development</em> — featuring interactive menus, cart management, and integrated Paystack payment processing.</p>
               <div class="tag-row"><span class="chip">React</span><span class="chip">Tailwind CSS</span><span class="chip">Paystack</span></div>
             </div>
-            <a class="visit" href="https://davidajayia.github.io/THE-PLATTER-HOUSE/" target="_blank" rel="noopener">Visit site <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M7 7h10v10"/></svg></a>
+            <a class="visit" href="https://davidajayia.github.io/THE-PLATTER-HOUSE/" target="_blank" rel="noopener">Preview live build <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M7 7h10v10"/></svg></a>
           </div>
         </div>
 
         <div class="log-entry">
-          <div class="log-dot"></div>
+          <div class="log-dot wip"></div>
           <div class="log-path">~/projects/08</div>
           <div class="log-card">
             <div class="log-card-main">
-              <h3>BRIDGE GLOBAL PRODUCTION</h3>
+                <div class="project-title-row">
+                <h3 style="margin-bottom:0;">BRIDGE GLOBAL PRODUCTION</h3>
+                <span class="badge-status"><span class="status-dot"></span>In active development</span>
+              </div>
+
               <p>responsive site for Bridge Global Productions, a Lagos-based media production company with a bold red brand identity, video-ready hero, services and original-shows showcase, 
-                and a continuously scrolling clip reel built to establish credibility and convert visitors into clients.</p>
+                and a continuously scrolling clip reel built to establish credibility and convert visitors into clients. <em>Currently in active development</em></p>
               <div class="tag-row"><span class="chip">HTML/CSS</span><span class="chip">JavaScript</span></div>
             </div>
             <a class="visit" href="https://davidajayia.github.io/BRIDGE-GLOBAL-PRODUCTION/" target="_blank" rel="noopener">Visit site <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M7 7h10v10"/></svg></a>
